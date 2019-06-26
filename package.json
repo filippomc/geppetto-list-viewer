@@ -1,0 +1,39 @@
+{
+  "name": "geppetto-listviewer",
+  "version": "0.1.0",
+  "description": "Shows Geppetto Model instances in a filterable grid list",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "debug": "react-scripts --nolazy --debug-brk=5858 start",
+    "eject": "react-scripts eject",
+    "deploy": "gh-pages -d build"
+  },
+  "author": "Filippo Ledda",
+  "license": "MIT",
+  "devDependencies": {
+    "react-scripts": "^3.0.1"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.19",
+    "@fortawesome/free-solid-svg-icons": "^5.9.0",
+    "@fortawesome/react-fontawesome": "^0.1.4",
+    "griddle-react": "^1.13.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
