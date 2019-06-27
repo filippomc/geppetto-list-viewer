@@ -1,90 +1,106 @@
 import React from 'react';
 import Griddle, { plugins, ColumnDefinition, RowDefinition } from 'griddle-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCoffee, faGhost, faChartArea, faHandPointer } from '@fortawesome/free-solid-svg-icons'
 
+import './listviewer.less';
 
+/**
+ * Allows to group multiple components in a single column
+ * @param {*} conf 
+ */
 export const GroupComponent = conf => ({ value }) => conf.map(
   ({ id, customComponent, configuration }) =>
     React.createElement(customComponent(configuration), { key: id, value: value })
 );
-export const IconComponent = ({ icon, action }) => ({ value }) => <FontAwesomeIcon icon={icon} onClick={() => action(value)} />
 
-const WrapperComponent = (cssClassName, action, customComponent) => ({ value }) => (<span className={cssClassName}>{customComponent ? React.createElement(customComponent, { value: value }) : value}</span>)
+/**
+ * Shows a fontAwesome icon. Allows an action to be specified
+ * @param { icon, action, color, tooltip } 
+ */
+export const IconComponent = ({ icon, action, color, tooltip }) => 
+  ({ value }) => 
+    <span 
+      style={{ color: color }} 
+      className='list-icon' 
+      title={tooltip}
+      onClick={() => action(value)}><
+        FontAwesomeIcon icon={icon} />
+    </span>
+
+/**
+ * Wraps a component implementing a click action on it.
+ * @param {*} action 
+ * @param {*} customComponent 
+ */
+export const WrapperComponent = (action, customComponent) => ({ value }) => 
+  (<span onClick={() => action(value)}>{customComponent ? React.createElement(customComponent, { value: value }) : value}
+  </span>)
+
+/**
+ * Shows an image from the data field. If the data field has no value, a default image is shown instead.
+ * 
+ * @param { title, alt, defaultImg, action }
+ */
+export const ImageComponent = ({ title, alt, defaultImg, action }) => 
+  ({ value }) =>
+    <img src={value ? value : defaultImg} 
+      title={title} 
+      alt={alt ? alt : title} 
+      onClick={() => action(value)}
+      className="thumbnail-img" />
+
+
+export const ParameterInputComponent = ({ placeholder, onBlur, onKeyPress, readOnly, classString, unit, defaultValue }) => ({ value }) => 
+  <React.Fragment>
+    <input 
+      placeholder={placeholder}
+      defaultValue={defaultValue instanceof Function ? defaultValue(value) : defaultValue}
+      onBlur={evt => onBlur(value, evt.target.value)}
+      onKeyPress={evt => onKeyPress(value, evt.target.value)}
+      className={classString}
+      title=""
+      readOnly={readOnly} />
+    <span className="control-panel-parameter-unit">{unit}</span>
+  </React.Fragment>
+
+/**
+ * Shows the data value as a link
+ */
+export const LinkComponent = () => ({ value }) => <a href={value} target="_blank">{value}</a>
 
 export const defaultColumnConfiguration = [
   {
     id: "path",
-    displayName: "Path",
-    source: entity => entity.path, // Can be specified also as the string "path"
-    cssClassName: 'red', 
+    title: "Path",
+    source: 'path',
   },
   {
-    id: "controls",
-    source: entity => entity,
-    displayName: "Controls",
-    customComponent: GroupComponent,
-    
-    configuration: [
-      {
-        id: "plot",
-        customComponent: IconComponent,
-        configuration: {
-          action: entity => alert('plot'),
-          icon: faChartArea,
-          label: "Plot",
-          tooltip: "Plot time series"
-        },
-
-      },
-      {
-        id: "select",
-        customComponent: IconComponent,
-        configuration: {
-          action: 'selectAction', // This will call the method on the handler component specified
-          icon: faHandPointer,
-          label: "Select",
-          tooltip: "Select in 3D canvas"
-        },
-
-      },
-    ]
+    id: "metaType",
+    title: "Meta Type",
+    source: 'metaType',
   },
   {
-    id: "long",
-    customComponent: IconComponent,
-    source: entity => entity.path,
-    configuration: {
-      action: 'selectAction', // This will call the method on the handler component specified
-      icon: faGhost,
-      label: "Ghost",
-      tooltip: "Ghost tooltip"
-    },
-
+    id: "type",
+    title: "Type",
+    source: 'type',
   },
-  {
-    id: "pathHidden",
-    displayName: "Path",
-    visible: false,
-    source: entity => entity.path // Can be specified also as the string "path"
-  }
 ];
 
 
 function extractGriddleData (data, listViewerColumnsConfiguration) {
   return data.map(row => listViewerColumnsConfiguration.reduce(
     (processedRow, confItem) => {
-      processedRow[confItem.id] = confItem.source(row);
+
+      processedRow[confItem.id] = confItem.source === undefined ? row : confItem.source instanceof Function ? confItem.source(row) : row[confItem.source];
       return processedRow;
     }, {})
   );
 }
 
 
-const CustomHeading = ({ title }) => <span style={{ color: '#AA0000' }}>{title}</span>;
-
-
 export default class ListViewer extends React.Component {
+  
+  builtInComponents = { GroupComponent, IconComponent, WrapperComponent, LinkComponent, ImageComponent }
 
   constructor (props, context) {
     super(props, context);
@@ -104,7 +120,7 @@ export default class ListViewer extends React.Component {
         ? this.props.columnConfiguration
         : defaultColumnConfiguration
     );
-    this.data = extractGriddleData(this.props.instances, this.columnConfiguration);
+    this.data = extractGriddleData(this.props.filter ? this.props.instances.filter(this.props.filter) : this.props.instances, this.columnConfiguration);
   }
 
   /**
@@ -127,40 +143,91 @@ export default class ListViewer extends React.Component {
       ...conf,
       id: conf.id ? conf.id : this.incrementalId++,
       action: conf.action === undefined ? undefined : this.preprocessAction(conf.action),
+      onBlur: conf.onBlur === undefined ? undefined : this.preprocessAction(conf.onBlur),
+      onChange: conf.onChange === undefined ? undefined : this.preprocessAction(conf.onChange),
+      onKeyPress: conf.onKeyPress === undefined ? undefined : this.preprocessAction(conf.onKeyPress),
       customComponent: conf.customComponent === undefined ? undefined : this.preprocessComponent(conf.customComponent),
       configuration: conf.configuration === undefined ? undefined : this.preprocessColumnConfiguration(conf.configuration)
     };
 
   }
   preprocessAction (action) {
-    return typeof action === 'string' || action instanceof String ? entity => this.handlerObject[action](entity) : action;
+    if (this.isString(action)){
+      if (!this.handlerObject[action]){
+        throw new Error('Bad ListViewer configuration: the function ' + action + ' is not defined in the specified handler ' + this.handlerObject);
+      }
+      return entity => this.handlerObject[action](entity)
+    } else {
+      return action.bind(this.handlerObject);
+    } 
+  }
+
+  isString (obj) {
+    return typeof obj === 'string' || obj instanceof String;
   }
 
   preprocessComponent (customComponent) {
-    return customComponent instanceof String ? eval(customComponent) : customComponent;
+    if (this.isString(customComponent)) {
+      if (this.builtInComponents[customComponent]) {
+        return this.builtInComponents[customComponent];
+      } else if (window[customComponent]) {
+        return window[customComponent];
+      } else {
+        throw new Error('ListViewer configuration error: ' + customComponent + ' not defined. Try attach to the global (window) context or pass the imported object instead.');
+      }
+    }
+    return customComponent;
   }
 
   getFilterFn () {
     return this.props.filterFn ? this.props.filterFn : () => true;
   }
 
+  /**
+   * <ColumnDefinition key="path" id="path" customComponent={CustomColumn} />,
+   * <ColumnDefinition key="controls" id="actions" customHeadingComponent={CustomHeading} customComponent={CustomActions(buttonsConf)} />
+   * @param {*} param0 
+   */
+  getColumnDefinition (conf) {
+    let { id, customComponent, configuration, action } = conf;
+
+    if (configuration && customComponent) {
+      customComponent = customComponent(configuration)
+    }
+
+    if ( action) {
+      customComponent = WrapperComponent(action, customComponent)
+    }
+     
+    return React.createElement(ColumnDefinition, { ...conf, key: id, configuration: undefined, customComponent: customComponent, source: undefined });
+  }
+
+  getColumnDefinitions () {
+    return this.columnConfiguration.map(colConf => this.getColumnDefinition(colConf));
+  }
+  getLayout () {
+    return ({ Table, Pagination, Filter, SettingsWrapper }) => ( <div className="listviewer-container">
+      <Filter />
+      <Table />
+      <Pagination />
+    </div> );
+  }
   render () {
     // const { data, currentPage, pageSize, recordCount } = this.state;
     console.log("ColumnConfiguration", this.columnConfiguration);
     window.conf = this.columnConfiguration;
-    return <div className='listViewer'>
+    return <section className="listviewer">
 
       <Griddle
 
         data={this.data}
 
-        plugins={[plugins.LocalPlugin, plugins.PositionPlugin({
-          tableHeight: 200,
-          tableWidth: null,
-          fixedHeader: true
-        })]}
+        plugins={this.props.infiniteScroll 
+          ? [plugins.LocalPlugin, plugins.PositionPlugin({})] 
+          : [plugins.LocalPlugin]
+        }
 
-
+        components={{ Layout: this.getLayout() }}
         /*
          * pageProperties={{
          *     currentPage: currentPage,
@@ -176,26 +243,8 @@ export default class ListViewer extends React.Component {
         </RowDefinition>
       </Griddle>
 
-    </div>
+    </section>
   }
   
-  /**
-   * <ColumnDefinition key="path" id="path" customComponent={CustomColumn} />,
-   * <ColumnDefinition key="controls" id="actions" customHeadingComponent={CustomHeading} customComponent={CustomActions(buttonsConf)} />
-   * @param {*} param0 
-   */
-  getColumnDefinition ({ id, customComponent, configuration, cssClassName, displayName, action, visible }) {
-    if (configuration && customComponent) {
-      customComponent = customComponent(configuration)
-    }
-    if ( action) {
-      customComponent = WrapperComponent(cssClassName, action, customComponent)
-    }
-     
-    return <ColumnDefinition key={id} id={id} title={displayName} cssClassName={cssClassName} visible={visible} customHeadingComponent={CustomHeading} customComponent={customComponent} />
-  }
-
-  getColumnDefinitions () {
-    return this.columnConfiguration.map(colConf => this.getColumnDefinition(colConf));
-  }
+ 
 }
