@@ -1,7 +1,6 @@
 import React from 'react';
 import ListViewer from '../ListViewer';
 import instances from './instances-small.json';
-import { faGhost, faChartArea, faHandPointer } from '@fortawesome/free-solid-svg-icons';
 import { GroupComponent, IconComponent, LinkComponent, ImageComponent, ParameterInputComponent } from '../ListViewer';
 
 const CustomHeading = ({ title }) => <span style={{ color: '#AA0000' }}>{title}</span>;
@@ -63,7 +62,7 @@ const conf = [
         customComponent: 'IconComponent', // We can use the string for default components
         configuration: {
           action: entity => alert('plot'), // No binding for arrow functions: will run on the current context
-          icon: faChartArea,
+          icon: 'area-chart',
           label: "Plot",
           tooltip: "Plot time series"
         },
@@ -74,7 +73,7 @@ const conf = [
         customComponent: IconComponent,
         configuration: {
           action: 'selectAction', // This will call the method on the handler component: handler.selectAction(value) 
-          icon: faHandPointer,
+          icon: 'thumbs-up',
           label: "Select",
           tooltip: "Select in 3D canvas"
         },
@@ -88,10 +87,10 @@ const conf = [
     source: entity => entity.path,
     configuration: {
       action: 'selectAction', // This will call the method on the handler component specified
-      icon: faGhost,
+      icon: 'rocket',
       color: 'red',
-      label: "Ghost",
-      tooltip: "Ghost tooltip"
+      label: "Rocket",
+      tooltip: "Red Rocket tooltip"
     },
 
   },

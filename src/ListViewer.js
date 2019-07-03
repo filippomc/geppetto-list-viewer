@@ -1,6 +1,6 @@
 import React from 'react';
 import Griddle, { plugins, ColumnDefinition, RowDefinition } from 'griddle-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import FontAwesome from 'react-fontawesome';
 
 import './listviewer.less';
 
@@ -9,23 +9,28 @@ import './listviewer.less';
  * @param {*} conf 
  */
 export const GroupComponent = conf => ({ value }) => conf.map(
-  ({ id, customComponent, configuration }) =>
-    React.createElement(customComponent(configuration), { key: id, value: value })
+  ({ id, customComponent, configuration }) => {
+    if (!customComponent) {
+      customComponent = WrapperComponent;
+    }
+    return React.createElement(customComponent(configuration), { key: id, value: value });
+  }
+    
 );
 
 /**
  * Shows a fontAwesome icon. Allows an action to be specified
  * @param { icon, action, color, tooltip } 
  */
-export const IconComponent = ({ icon, action, color, tooltip }) => 
+export const IconComponent = ({ icon, action, color, tooltip, condition = value => true }) => 
   ({ value }) => 
-    <span 
+    condition(value) ? <span 
       style={{ color: color }} 
       className='list-icon' 
       title={tooltip}
-      onClick={() => action(value)}><
-        FontAwesomeIcon icon={icon} />
-    </span>
+      onClick={() => action(value)}>
+      <FontAwesome name={icon} />
+    </span> : ''
 
 /**
  * Wraps a component implementing a click action on it.
@@ -39,7 +44,7 @@ export const WrapperComponent = (action, customComponent) => ({ value }) =>
 /**
  * Shows an image from the data field. If the data field has no value, a default image is shown instead.
  * 
- * @param { title, alt, defaultImg, action }
+ * @param { title, alt, defaultImg, action } configuration
  */
 export const ImageComponent = ({ title, alt, defaultImg, action }) => 
   ({ value }) =>
@@ -49,7 +54,13 @@ export const ImageComponent = ({ title, alt, defaultImg, action }) =>
       onClick={() => action(value)}
       className="thumbnail-img" />
 
-
+/**
+ * Allows to specify an input field.
+ * 
+ * The value can be processed on the onBlur action
+ * 
+ * @param { placeholder, onBlur, onKeyPress, readOnly, classString, unit, defaultValue } configuration
+ */
 export const ParameterInputComponent = ({ placeholder, onBlur, onKeyPress, readOnly, classString, unit, defaultValue }) => ({ value }) => 
   <React.Fragment>
     <input 
@@ -89,14 +100,15 @@ export const defaultColumnConfiguration = [
 
 function extractGriddleData (data, listViewerColumnsConfiguration) {
   return data.map(row => listViewerColumnsConfiguration.reduce(
-    (processedRow, confItem) => {
-
-      processedRow[confItem.id] = confItem.source === undefined ? row : confItem.source instanceof Function ? confItem.source(row) : row[confItem.source];
-      return processedRow;
-    }, {})
-  );
+    reduceEntityToGriddleRow(row), {}
+  ));
 }
-
+function reduceEntityToGriddleRow (row) {
+  return (processedRow, { id, source }) => ({
+    ...processedRow,
+    [id]: source === undefined ? row : source instanceof Function ? source(row) : row[source]
+  });
+}
 
 export default class ListViewer extends React.Component {
   
@@ -248,3 +260,5 @@ export default class ListViewer extends React.Component {
   
  
 }
+
+

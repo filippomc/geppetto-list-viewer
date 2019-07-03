@@ -21,9 +21,7 @@
     "less-loader": "^5.0.0"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.19",
-    "@fortawesome/free-solid-svg-icons": "^5.9.0",
-    "@fortawesome/react-fontawesome": "^0.1.4",
+    "react-fontawesome": "^1.6.1",
     "griddle-react": "^1.13.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
