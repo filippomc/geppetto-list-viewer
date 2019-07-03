@@ -2,6 +2,7 @@ import React from 'react';
 import Griddle, { plugins, ColumnDefinition, RowDefinition } from 'griddle-react';
 import FontAwesome from 'react-fontawesome';
 
+import PopupColorPicker from './PopupColorPicker';
 import './listviewer.less';
 
 /**
@@ -74,10 +75,16 @@ export const ParameterInputComponent = ({ placeholder, onBlur, onKeyPress, readO
     <span className="control-panel-parameter-unit">{unit}</span>
   </React.Fragment>
 
+
+export const ColorComponent = ({ action, defaultColor }) => ({ value }) => 
+  <React.Fragment>
+    <PopupColorPicker color={ defaultColor } action={ hex => action(value, hex) }/>
+  </React.Fragment>
 /**
  * Shows the data value as a link
  */
 export const LinkComponent = () => ({ value }) => <a href={value} target="_blank">{value}</a>
+
 
 export const defaultColumnConfiguration = [
   {

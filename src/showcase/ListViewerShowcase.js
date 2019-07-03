@@ -1,7 +1,7 @@
 import React from 'react';
 import ListViewer from '../ListViewer';
 import instances from './instances-small.json';
-import { GroupComponent, IconComponent, LinkComponent, ImageComponent, ParameterInputComponent } from '../ListViewer';
+import { GroupComponent, IconComponent, LinkComponent, ImageComponent, ParameterInputComponent, ColorComponent } from '../ListViewer';
 
 const CustomHeading = ({ title }) => <span style={{ color: '#AA0000' }}>{title}</span>;
 
@@ -14,7 +14,7 @@ const conf = [
     cssClassName: 'red', 
     action: function (entity) {
       return this.selectAction(entity); // 'this' is bound to the handler
-    }
+    },
   },
   {
     id: "link",
@@ -26,13 +26,26 @@ const conf = [
   {
     id: "image",
     title: "Image",
-    source: () => 'http://www.geppetto.org/images/logo.png',
+    source: () => 'https://www.virtualflybrain.org/data/VFB/i/0002/9717//thumbnailT.png',
     customComponent: ImageComponent,
     configuration: {
       alt: "Alt for the image",
       title: "Image title",
       action: () => alert('Image')
     }
+  },
+  {
+    id: "color",
+    title: "Color",
+    customComponent: ColorComponent,
+    source: entity => entity.path,
+    configuration: {
+      action: (model, color) => console.log(model, color), // This will call the method on the handler component specified
+      defaultColor: '#FF0000',
+      label: "Rocket",
+      tooltip: "Red Rocket tooltip"
+    },
+
   },
   {
     id: 'input',
@@ -49,6 +62,7 @@ const conf = [
       unit: 'mm' 
     }
   },
+ 
   {
     id: "controls",
     source: entity => entity,
@@ -81,19 +95,7 @@ const conf = [
       },
     ]
   },
-  {
-    id: "long",
-    customComponent: IconComponent,
-    source: entity => entity.path,
-    configuration: {
-      action: 'selectAction', // This will call the method on the handler component specified
-      icon: 'rocket',
-      color: 'red',
-      label: "Rocket",
-      tooltip: "Red Rocket tooltip"
-    },
-
-  },
+  
   {
     id: "pathHidden",
     displayName: "Path",
@@ -147,8 +149,8 @@ export default class ListViewerShowcase extends React.Component {
 
   exampleFull () {
     return <div id="example-filter">
-      <h1>Example from example1.js</h1>
-      <div style={{ height: "400px", width: "100%" }}>
+      <h1>Example with common features</h1>
+      <div style={{ height: "900px", width: "100%" }}>
         <ListViewer columnConfiguration={conf} filter={() => true} instances={instances} handler={this} infiniteScroll={true} />
       </div>;
     </div>
