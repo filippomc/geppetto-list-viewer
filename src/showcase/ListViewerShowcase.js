@@ -95,7 +95,7 @@ const conf = [
         id: "toggle",
         customComponent: MultiStatusComponent,
         source: entity => entity.path,
-        configuration: [
+        configuration: [ // Can define how many statuses as we want. They will be changed in sequence at each click
           {
             action: v => alert('from on to off ' + v),
             icon: 'hand-stop-o',

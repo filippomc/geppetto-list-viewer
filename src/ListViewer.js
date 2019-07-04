@@ -1,6 +1,6 @@
 import React from 'react';
 import Griddle, { plugins, ColumnDefinition, RowDefinition } from 'griddle-react';
-import FontAwesome from 'react-fontawesome';
+import BaseIconComponent from './BaseIconComponent';
 
 import PopupColorPicker from './PopupColorPicker';
 import './listviewer.less';
@@ -31,14 +31,7 @@ export const GroupComponent = conf => ({ value }) => conf.map(
     
 );
 
-const IconBaseComponent = ({ icon, action, color, tooltip}) => 
-  <span 
-    style={{ color: color }} 
-    className='list-icon' 
-    title={tooltip}
-    onClick={action}>
-    <FontAwesome name={icon} />
-  </span>
+
 
 /**
  * Shows a fontAwesome icon. Allows an action to be specified
@@ -46,7 +39,7 @@ const IconBaseComponent = ({ icon, action, color, tooltip}) =>
  */
 export const IconComponent = ({ icon, action, color, tooltip, condition = value => true }) => 
   ({ value }) => 
-    condition(value) ? <IconBaseComponent 
+    condition(value) ? <BaseIconComponent 
       color = {color} 
       title={tooltip}
       action={() => action(value)}
@@ -68,7 +61,7 @@ export const MultiStatusComponent = availableStatuses => class Comp extends Reac
       
     const { tooltip, icon, action, color } = availableStatuses[this.state.statusIdx];
     
-    return <IconBaseComponent 
+    return <BaseIconComponent 
       color = {color} 
       title={tooltip}
       action={() => {
