@@ -5,19 +5,40 @@ import FontAwesome from 'react-fontawesome';
 import PopupColorPicker from './PopupColorPicker';
 import './listviewer.less';
 
+
+function mapToObject ( aMap ) {
+  const obj = {};
+  aMap.forEach ((v,k) => { obj[k] = v });
+  return obj;
+}
+
 /**
  * Allows to group multiple components in a single column
  * @param {*} conf 
  */
 export const GroupComponent = conf => ({ value }) => conf.map(
-  ({ id, customComponent, configuration }) => {
+  ({ id, customComponent, configuration, source }) => {
     if (!customComponent) {
       customComponent = WrapperComponent;
     }
-    return React.createElement(customComponent(configuration), { key: id, value: value });
+    if (configuration) {
+      customComponent = customComponent(configuration);
+    }
+    const componentValue = source ? mapSourceToRow(source, value): value;
+
+    return React.createElement(customComponent, { key: id, value: componentValue });
   }
     
 );
+
+const IconBaseComponent = ({ icon, action, color, tooltip}) => 
+  <span 
+    style={{ color: color }} 
+    className='list-icon' 
+    title={tooltip}
+    onClick={action}>
+    <FontAwesome name={icon} />
+  </span>
 
 /**
  * Shows a fontAwesome icon. Allows an action to be specified
@@ -25,13 +46,39 @@ export const GroupComponent = conf => ({ value }) => conf.map(
  */
 export const IconComponent = ({ icon, action, color, tooltip, condition = value => true }) => 
   ({ value }) => 
-    condition(value) ? <span 
-      style={{ color: color }} 
-      className='list-icon' 
+    condition(value) ? <IconBaseComponent 
+      color = {color} 
       title={tooltip}
-      onClick={() => action(value)}>
-      <FontAwesome name={icon} />
-    </span> : ''
+      action={() => action(value)}
+      icon={icon} />
+ : ''
+
+
+export const MultiStatusComponent = availableStatuses => class Comp extends React.Component {
+  constructor (props) {
+    super(props);
+    // State contains the index of a circular list
+    this.state = { statusIdx: 0 };
+    this.value = props.value;
+  }
+
+
+  render () {
+    const { statusIdx } = this.state;
+      
+    const { tooltip, icon, action, color } = availableStatuses[this.state.statusIdx];
+    
+    return <IconBaseComponent 
+      color = {color} 
+      title={tooltip}
+      action={() => {
+        this.setState({ statusIdx: statusIdx + 1 < availableStatuses.length ? statusIdx + 1 : 0 });
+        action(this.value);
+      }}
+      icon={icon} />
+
+  }
+}
 
 /**
  * Wraps a component implementing a click action on it.
@@ -83,7 +130,7 @@ export const ColorComponent = ({ action, defaultColor }) => ({ value }) =>
 /**
  * Shows the data value as a link
  */
-export const LinkComponent = () => ({ value }) => <a href={value} target="_blank">{value}</a>
+export const LinkComponent = () => ({ value }) => <a href={value} target="_blank" rel="noopener noreferrer">{value}</a>
 
 
 export const defaultColumnConfiguration = [
@@ -113,9 +160,18 @@ function extractGriddleData (data, listViewerColumnsConfiguration) {
 function reduceEntityToGriddleRow (row) {
   return (processedRow, { id, source }) => ({
     ...processedRow,
-    [id]: source === undefined ? row : source instanceof Function ? source(row) : row[source]
+    [id]: mapSourceToRow(source, row)
   });
 }
+
+
+function mapSourceToRow(source, row) {
+  if(row.get){ // is a map coming from griddle. instanceof Map does not work here
+    row = mapToObject(row);
+  }
+  return source === undefined ? row : source instanceof Function ? source(row) : row[source];
+}
+
 
 export default class ListViewer extends React.Component {
   
@@ -211,11 +267,11 @@ export default class ListViewer extends React.Component {
     let { id, customComponent, configuration, action } = conf;
 
     if (configuration && customComponent) {
-      customComponent = customComponent(configuration)
+      customComponent = customComponent(configuration);
     }
 
     if ( action) {
-      customComponent = WrapperComponent(action, customComponent)
+      customComponent = WrapperComponent(action, customComponent);
     }
      
     return React.createElement(ColumnDefinition, { ...conf, key: id, configuration: undefined, customComponent: customComponent, source: undefined });
@@ -224,6 +280,7 @@ export default class ListViewer extends React.Component {
   getColumnDefinitions () {
     return this.columnConfiguration.map(colConf => this.getColumnDefinition(colConf));
   }
+
   getLayout () {
     return ({ Table, Pagination, Filter, SettingsWrapper }) => ( <div className="listviewer-container">
       <Filter />
@@ -231,6 +288,7 @@ export default class ListViewer extends React.Component {
       <Pagination />
     </div> );
   }
+
   render () {
     // const { data, currentPage, pageSize, recordCount } = this.state;
     console.log("ColumnConfiguration", this.columnConfiguration);

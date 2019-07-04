@@ -1,7 +1,7 @@
 import React from 'react';
 import ListViewer from '../ListViewer';
 import instances from './instances-small.json';
-import { GroupComponent, IconComponent, LinkComponent, ImageComponent, ParameterInputComponent, ColorComponent } from '../ListViewer';
+import { GroupComponent, IconComponent, LinkComponent, ImageComponent, ParameterInputComponent, ColorComponent, MultiStatusComponent } from '../ListViewer';
 
 const CustomHeading = ({ title }) => <span style={{ color: '#AA0000' }}>{title}</span>;
 
@@ -77,22 +77,39 @@ const conf = [
         configuration: {
           action: entity => alert('plot'), // No binding for arrow functions: will run on the current context
           icon: 'area-chart',
-          label: "Plot",
           tooltip: "Plot time series"
         },
 
       },
       {
-        id: "select",
+        id: "zoom",
         customComponent: IconComponent,
         configuration: {
-          action: 'selectAction', // This will call the method on the handler component: handler.selectAction(value) 
-          icon: 'thumbs-up',
-          label: "Select",
-          tooltip: "Select in 3D canvas"
+          action: 'zoomAction', // This will call the method on the handler component: handler.selectAction(value) 
+          icon: 'search-plus',
+          tooltip: "Zoom in 3D canvas"
         },
 
       },
+      {
+        id: "toggle",
+        customComponent: MultiStatusComponent,
+        source: entity => entity.path,
+        configuration: [
+          {
+            action: v => alert('from on to off ' + v),
+            icon: 'hand-stop-o',
+            tooltip: "Turn off"
+          },
+          {
+            action: v => alert('from off to on ' + v),
+            icon: 'hand-rock-o',
+            tooltip: "Turn on"
+          }
+        ]
+      },
+
+      
     ]
   },
   
@@ -106,9 +123,9 @@ const conf = [
 
 export default class ListViewerShowcase extends React.Component {
    
-  selectAction (param) {
+  zoomAction (param) {
     console.log(param);
-    alert("select " + param);
+    alert("zoom " + param);
   }
   render () {
     
@@ -132,7 +149,7 @@ export default class ListViewerShowcase extends React.Component {
       <h1>Simple example with data filter</h1>
       <p>Here we are filtering all data to be of metaType "CompositeType"</p>
       <div>
-        <ListViewer filter={row => row.metaType == 'CompositeType'} instances={instances} />
+        <ListViewer filter={row => row.metaType === 'CompositeType'} instances={instances} />
       </div>
     </div>;
   }
