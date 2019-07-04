@@ -123,7 +123,7 @@ export const ColorComponent = ({ action, defaultColor }) => ({ value }) =>
 /**
  * Shows the data value as a link
  */
-export const LinkComponent = () => ({ value }) => <a href={value} target="_blank" rel="noopener noreferrer">{value}</a>
+export const LinkComponent = ({text}) => ({ value }) => <a href={value} target="_blank" rel="noopener noreferrer">{text ? text : value }</a>
 
 
 export const defaultColumnConfiguration = [

@@ -43,7 +43,7 @@ export default class PopupColorPicker extends React.Component {
     });
 
     return (
-      <div style={ styles.containe } >
+      <div style={ styles.container } >
         <BaseIconComponent action={ this.handleClick } color={ this.state.color } icon="tint" />
 
         { this.state.displayColorPicker ? <div style={ styles.popover }>
