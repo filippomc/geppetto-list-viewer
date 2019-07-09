@@ -12,7 +12,7 @@ const conf = [
     id: "path",
     title: "Path",
     source: 'path', // entity.path. Same as (entity) => entity.path
-    cssClassName: 'red', //custom css class
+    cssClassName: 'red', // custom css class
     action: function (entity) {
       return this.selectAction(entity); // 'this' is bound to the handler
     },
@@ -23,9 +23,7 @@ const conf = [
     title: "Link",
     source: () => 'http://www.geppetto.org/',
     customComponent: LinkComponent,
-    configuration: {
-      text: 'Geppetto'
-    }
+    configuration: { text: 'Geppetto' }
   },
   {
     // An external image
@@ -56,7 +54,7 @@ const conf = [
     // Define a custom render component inline
     id: "custom",
     title: "Custom",
-    customComponent: (value) => <span>Inline <strong>custom</strong><br/> component</span>,
+    customComponent: value => <span>Inline <strong>custom</strong><br/> component</span>,
     source: entity => entity.path, // Source is always optional. If not defined it will equal to entity => entity
   },
   {
